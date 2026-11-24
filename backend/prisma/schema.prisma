@@ -1,0 +1,10 @@
+// Models will be filled in the next step (HrUser, Currency, Country, Employee, Salary)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
