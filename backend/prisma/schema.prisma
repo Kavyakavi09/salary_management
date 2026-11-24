@@ -1,5 +1,3 @@
-// Models will be filled in the next step (HrUser, Currency, Country, Employee, Salary)
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,4 +5,15 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model HrUser {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         String   @default("hr_admin")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("hr_users")
 }

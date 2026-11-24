@@ -1,6 +1,8 @@
 import express from "express";
 import helmet from "helmet";
 import cors from "cors";
+import authRouter from "./routes/authRoutes";
+import { notFound, errorHandler } from "./middleware/errorHandler";
 
 const app = express();
 
@@ -26,5 +28,10 @@ app.get("/health", (_req, res) => {
     message: "Server is Healthy",
   });
 });
+
+app.use("/api/auth", authRouter);
+
+app.use(notFound);
+app.use(errorHandler);
 
 export default app;

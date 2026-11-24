@@ -2,3 +2,5 @@ node_modules
 dist
 .env
 *.log
+prisma/test.db
+prisma/test.db-journal
