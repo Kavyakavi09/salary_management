@@ -22,6 +22,8 @@ beforeAll(() => {
 });
 
 afterEach(async () => {
+  await prisma.employee.deleteMany();
+  await prisma.department.deleteMany();
   await prisma.hrUser.deleteMany();
 });
 

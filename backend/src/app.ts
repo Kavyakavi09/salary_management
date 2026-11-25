@@ -2,6 +2,8 @@ import express from "express";
 import helmet from "helmet";
 import cors from "cors";
 import authRouter from "./routes/authRoutes";
+import departmentRouter from "./routes/departmentRoutes";
+import employeeRouter from "./routes/employeeRoutes";
 import { notFound, errorHandler } from "./middleware/errorHandler";
 
 const app = express();
@@ -30,6 +32,8 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRouter);
+app.use("/api/departments", departmentRouter);
+app.use("/api/employees", employeeRouter);
 
 app.use(notFound);
 app.use(errorHandler);

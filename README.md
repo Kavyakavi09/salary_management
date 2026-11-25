@@ -39,6 +39,22 @@ API runs at `http://localhost:8000`.
 | `npm run prisma:seed`| Seed HR user               |
 | `docker compose up -d` | Start PostgreSQL         |
 
+### Postman
+
+Import the collection so all routers appear as folders:
+
+1. Open Postman → **Import**
+2. Choose [`postman/ACME_Salary_Management.postman_collection.json`](postman/ACME_Salary_Management.postman_collection.json)
+3. Folders you’ll see:
+   - **Health**
+   - **Auth (/api/auth)**
+   - **Departments (/api/departments)**
+   - **Employees (/api/employees)**
+4. Run **Auth → Login** first (saves `{{token}}`)
+5. Create/list a department (saves `{{departmentId}}`), then exercise employee APIs
+
+`baseUrl` defaults to `http://localhost:8000` (matches `.env` `PORT`).
+
 ## Endpoints
 
 Base URL: `http://localhost:8000`
@@ -94,6 +110,26 @@ Authorization: Bearer <token>
 GET /api/auth/current-user
 Authorization: Bearer <token>
 ```
+
+### Departments (`/api/departments`)
+
+| Method | Path | Auth |
+| ------ | ---- | ---- |
+| GET | `/` | Bearer |
+| POST | `/` | Bearer |
+| GET | `/:id` | Bearer |
+| PATCH | `/:id` | Bearer |
+| DELETE | `/:id` | Bearer |
+
+### Employees (`/api/employees`)
+
+| Method | Path | Auth |
+| ------ | ---- | ---- |
+| GET | `/` | Bearer |
+| POST | `/` | Bearer |
+| GET | `/:id` | Bearer |
+| PATCH | `/:id` | Bearer |
+| DELETE | `/:id` | Bearer |
 
 ## Project docs
 

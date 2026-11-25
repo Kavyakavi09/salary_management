@@ -5,10 +5,25 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
+  const departments = [
+    "Engineering",
+    "Human Resources",
+    "Finance",
+    "Sales",
+    "Operations",
+  ];
+
+  for (const name of departments) {
+    await prisma.department.upsert({
+      where: { name },
+      update: {},
+      create: { name },
+    });
+  }
+
   const name = process.env.SEED_HR_NAME || "ACME HR";
   const email = process.env.SEED_HR_EMAIL || "hr@acme.com";
   const password = process.env.SEED_HR_PASSWORD || "Password123!";
-
   const passwordHash = await bcrypt.hash(password, 10);
 
   const user = await prisma.hrUser.upsert({
@@ -22,7 +37,7 @@ async function main() {
     },
   });
 
-  console.log(`Seeded HR user: ${user.name} <${user.email}>`);
+  console.log(`Seeded departments and HR user: ${user.name} <${user.email}>`);
 }
 
 main()

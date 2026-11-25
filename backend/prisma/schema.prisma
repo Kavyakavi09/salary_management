@@ -7,6 +7,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum EmployeeStatus {
+  active
+  inactive
+}
+
 model HrUser {
   id           String   @id @default(uuid())
   name         String
@@ -15,5 +20,44 @@ model HrUser {
   role         String   @default("hr_admin")
   createdAt    DateTime @default(now()) @map("created_at")
 
+  createdEmployees Employee[]
+
   @@map("hr_users")
+}
+
+model Department {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  employees Employee[]
+
+  @@map("departments")
+}
+
+model Employee {
+  id           String         @id @default(uuid())
+  employeeCode String         @unique @map("employee_code")
+  fullName     String         @map("full_name")
+  email        String         @unique
+  jobTitle     String         @map("job_title")
+  departmentId Int            @map("department_id")
+  country      String
+  grossSalary  Decimal        @map("gross_salary") @db.Decimal(12, 2)
+  currencyCode String         @map("currency_code")
+  hireDate     DateTime       @map("hire_date") @db.Date
+  status       EmployeeStatus @default(active)
+  createdById  String         @map("created_by")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+  deletedAt    DateTime?      @map("deleted_at")
+
+  department Department @relation(fields: [departmentId], references: [id])
+  createdBy  HrUser     @relation(fields: [createdById], references: [id])
+
+  @@index([departmentId])
+  @@index([country])
+  @@index([jobTitle])
+  @@index([status])
+  @@map("employees")
 }
