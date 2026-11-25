@@ -21,6 +21,15 @@ npm run dev
 
 App runs at `http://localhost:5173`. Backend should be at `http://localhost:8000`.
 
+## Tests
+
+```bash
+npm test
+npm run test:watch
+```
+
+Vitest + React Testing Library. Add `*.test.ts(x)` next to features as we build them.
+
 ## Folder structure
 
 ```text
@@ -30,6 +39,7 @@ src/
   pages/
   services/     # axios API client
   store/        # Redux store + slices
+  test/         # shared test helpers
   types/
   utils/
 ```
