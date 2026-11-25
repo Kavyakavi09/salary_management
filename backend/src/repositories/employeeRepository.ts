@@ -3,15 +3,21 @@ import { prisma } from "../config/db";
 
 export type EmployeeListFilters = {
   search?: string;
-  country?: string;
+  countryId?: number;
   jobTitle?: string;
   departmentId?: number;
   page: number;
   limit: number;
 };
 
-const departmentInclude = {
+const employeeInclude = {
   department: true,
+  country: true,
+  salaries: {
+    where: { effectiveTo: null },
+    take: 1,
+    orderBy: { effectiveFrom: "desc" as const },
+  },
 } satisfies Prisma.EmployeeInclude;
 
 const stringFilter = (value: string): Prisma.StringFilter => {
@@ -26,14 +32,7 @@ const employeeRepository = {
     const where: Prisma.EmployeeWhereInput = {
       deletedAt: null,
       ...(filters.departmentId ? { departmentId: filters.departmentId } : {}),
-      ...(filters.country
-        ? {
-            country:
-              process.env.NODE_ENV === "test"
-                ? filters.country
-                : { equals: filters.country, mode: "insensitive" },
-          }
-        : {}),
+      ...(filters.countryId ? { countryId: filters.countryId } : {}),
       ...(filters.jobTitle
         ? {
             jobTitle:
@@ -58,7 +57,7 @@ const employeeRepository = {
     return prisma.$transaction([
       prisma.employee.findMany({
         where,
-        include: departmentInclude,
+        include: employeeInclude,
         orderBy: [{ createdAt: "desc" }, { id: "desc" }],
         skip,
         take: filters.limit,
@@ -70,7 +69,7 @@ const employeeRepository = {
   findById(id: string) {
     return prisma.employee.findFirst({
       where: { id, deletedAt: null },
-      include: departmentInclude,
+      include: employeeInclude,
     });
   },
 
@@ -92,16 +91,14 @@ const employeeRepository = {
     email: string;
     jobTitle: string;
     departmentId: number;
-    country: string;
-    grossSalary: Prisma.Decimal | number | string;
-    currencyCode: string;
+    countryId: number;
     hireDate: Date;
     createdById: string;
     status?: EmployeeStatus;
   }) {
     return prisma.employee.create({
       data,
-      include: departmentInclude,
+      include: employeeInclude,
     });
   },
 
@@ -109,7 +106,7 @@ const employeeRepository = {
     return prisma.employee.update({
       where: { id },
       data,
-      include: departmentInclude,
+      include: employeeInclude,
     });
   },
 

@@ -2,6 +2,30 @@ import { EmployeeStatus } from "@prisma/client";
 import AppError from "../utils/AppError";
 import employeeRepository from "../repositories/employeeRepository";
 import departmentRepository from "../repositories/departmentRepository";
+import countryRepository from "../repositories/countryRepository";
+
+const toCurrentSalary = (
+  salaries?: Array<{
+    id: string;
+    amount: { toString(): string };
+    currencyCode: string;
+    payPeriod: string;
+    effectiveFrom: Date;
+    changeType: string;
+  }>
+) => {
+  const current = salaries?.[0];
+  if (!current) return null;
+
+  return {
+    id: current.id,
+    amount: current.amount.toString(),
+    currencyCode: current.currencyCode,
+    payPeriod: current.payPeriod,
+    effectiveFrom: current.effectiveFrom,
+    changeType: current.changeType,
+  };
+};
 
 const toEmployeeResponse = (employee: {
   id: string;
@@ -10,14 +34,26 @@ const toEmployeeResponse = (employee: {
   email: string;
   jobTitle: string;
   departmentId: number;
-  country: string;
-  grossSalary: { toString(): string };
-  currencyCode: string;
+  countryId: number;
   hireDate: Date;
   status: EmployeeStatus;
   createdAt: Date;
   updatedAt: Date;
   department?: { id: number; name: string } | null;
+  country?: {
+    id: number;
+    name: string;
+    currencyCode: string;
+    tdsRate: { toString(): string };
+  } | null;
+  salaries?: Array<{
+    id: string;
+    amount: { toString(): string };
+    currencyCode: string;
+    payPeriod: string;
+    effectiveFrom: Date;
+    changeType: string;
+  }>;
 }) => ({
   id: employee.id,
   employeeCode: employee.employeeCode,
@@ -28,9 +64,16 @@ const toEmployeeResponse = (employee: {
   department: employee.department
     ? { id: employee.department.id, name: employee.department.name }
     : undefined,
-  country: employee.country,
-  grossSalary: employee.grossSalary.toString(),
-  currencyCode: employee.currencyCode,
+  countryId: employee.countryId,
+  country: employee.country
+    ? {
+        id: employee.country.id,
+        name: employee.country.name,
+        currencyCode: employee.country.currencyCode,
+        tdsRate: employee.country.tdsRate.toString(),
+      }
+    : undefined,
+  currentSalary: toCurrentSalary(employee.salaries),
   hireDate: employee.hireDate,
   status: employee.status,
   createdAt: employee.createdAt,
@@ -39,7 +82,7 @@ const toEmployeeResponse = (employee: {
 
 const listEmployees = async (query: {
   search?: string;
-  country?: string;
+  countryId?: string;
   jobTitle?: string;
   departmentId?: string;
   page?: string;
@@ -50,14 +93,18 @@ const listEmployees = async (query: {
   const departmentId = query.departmentId
     ? Number(query.departmentId)
     : undefined;
+  const countryId = query.countryId ? Number(query.countryId) : undefined;
 
   if (query.departmentId && Number.isNaN(departmentId)) {
     throw new AppError("departmentId must be a number", 400);
   }
+  if (query.countryId && Number.isNaN(countryId)) {
+    throw new AppError("countryId must be a number", 400);
+  }
 
   const [employees, total] = await employeeRepository.findMany({
     search: query.search?.trim() || undefined,
-    country: query.country?.trim() || undefined,
+    countryId,
     jobTitle: query.jobTitle?.trim() || undefined,
     departmentId,
     page,
@@ -90,9 +137,7 @@ const createEmployee = async (
     email?: string;
     jobTitle?: string;
     departmentId?: number;
-    country?: string;
-    grossSalary?: number;
-    currencyCode?: string;
+    countryId?: number;
     hireDate?: string;
   },
   createdById: string
@@ -103,9 +148,7 @@ const createEmployee = async (
     email,
     jobTitle,
     departmentId,
-    country,
-    grossSalary,
-    currencyCode,
+    countryId,
     hireDate,
   } = body;
 
@@ -115,21 +158,20 @@ const createEmployee = async (
     !email ||
     !jobTitle ||
     departmentId === undefined ||
-    !country ||
-    !currencyCode ||
-    !hireDate ||
-    grossSalary === undefined
+    countryId === undefined ||
+    !hireDate
   ) {
     throw new AppError("All required employee fields must be provided", 400);
-  }
-
-  if (Number(grossSalary) <= 0) {
-    throw new AppError("grossSalary must be greater than 0", 400);
   }
 
   const department = await departmentRepository.findById(Number(departmentId));
   if (!department) {
     throw new AppError("Department not found", 404);
+  }
+
+  const country = await countryRepository.findById(Number(countryId));
+  if (!country) {
+    throw new AppError("Country not found", 404);
   }
 
   if (await employeeRepository.findByEmail(email)) {
@@ -146,9 +188,7 @@ const createEmployee = async (
     email,
     jobTitle,
     departmentId: Number(departmentId),
-    country,
-    grossSalary,
-    currencyCode,
+    countryId: Number(countryId),
     hireDate: new Date(hireDate),
     createdById,
   });
@@ -163,9 +203,7 @@ const updateEmployee = async (
     email?: string;
     jobTitle?: string;
     departmentId?: number;
-    country?: string;
-    grossSalary?: number;
-    currencyCode?: string;
+    countryId?: number;
     hireDate?: string;
     status?: EmployeeStatus;
   }
@@ -191,8 +229,11 @@ const updateEmployee = async (
     }
   }
 
-  if (body.grossSalary !== undefined && Number(body.grossSalary) <= 0) {
-    throw new AppError("grossSalary must be greater than 0", 400);
+  if (body.countryId !== undefined) {
+    const country = await countryRepository.findById(Number(body.countryId));
+    if (!country) {
+      throw new AppError("Country not found", 404);
+    }
   }
 
   if (body.status && !["active", "inactive"].includes(body.status)) {
@@ -206,10 +247,8 @@ const updateEmployee = async (
     ...(body.departmentId !== undefined
       ? { department: { connect: { id: Number(body.departmentId) } } }
       : {}),
-    ...(body.country !== undefined ? { country: body.country } : {}),
-    ...(body.grossSalary !== undefined ? { grossSalary: body.grossSalary } : {}),
-    ...(body.currencyCode !== undefined
-      ? { currencyCode: body.currencyCode }
+    ...(body.countryId !== undefined
+      ? { country: { connect: { id: Number(body.countryId) } } }
       : {}),
     ...(body.hireDate !== undefined
       ? { hireDate: new Date(body.hireDate) }

@@ -8,7 +8,7 @@ const paramId = (req: Request) => String(req.params.id);
 const listEmployees = asyncHandler(async (req: Request, res: Response) => {
   const result = await employeeService.listEmployees({
     search: req.query.search as string | undefined,
-    country: req.query.country as string | undefined,
+    countryId: req.query.countryId as string | undefined,
     jobTitle: req.query.jobTitle as string | undefined,
     departmentId: req.query.departmentId as string | undefined,
     page: req.query.page as string | undefined,

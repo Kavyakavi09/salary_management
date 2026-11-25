@@ -22,8 +22,11 @@ beforeAll(() => {
 });
 
 afterEach(async () => {
+  await prisma.salary.deleteMany();
   await prisma.employee.deleteMany();
   await prisma.department.deleteMany();
+  await prisma.country.deleteMany();
+  await prisma.currency.deleteMany();
   await prisma.hrUser.deleteMany();
 });
 

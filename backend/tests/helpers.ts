@@ -33,30 +33,62 @@ export const createHrUser = async ({
   return { user, password, token };
 };
 
+export const createCurrency = async ({
+  code = "INR",
+  name = "Indian Rupee",
+  symbol = "₹",
+}: {
+  code?: string;
+  name?: string;
+  symbol?: string;
+} = {}) => {
+  return prisma.currency.upsert({
+    where: { code },
+    update: { name, symbol },
+    create: { code, name, symbol },
+  });
+};
+
 export const createDepartment = async (name = "Engineering") => {
   return prisma.department.create({ data: { name } });
+};
+
+export const createCountry = async ({
+  name = "India",
+  currencyCode = "INR",
+  tdsRate = 0.2,
+}: {
+  name?: string;
+  currencyCode?: string;
+  tdsRate?: number;
+} = {}) => {
+  await createCurrency({
+    code: currencyCode,
+    name: currencyCode === "USD" ? "US Dollar" : "Indian Rupee",
+    symbol: currencyCode === "USD" ? "$" : "₹",
+  });
+
+  return prisma.country.create({
+    data: { name, currencyCode, tdsRate },
+  });
 };
 
 export const createEmployee = async ({
   hrUserId,
   departmentId,
+  countryId,
   employeeCode = "EMP001",
   fullName = "Ada Lovelace",
   email = "ada@acme.com",
   jobTitle = "Engineer",
-  country = "India",
-  grossSalary = 50000,
-  currencyCode = "INR",
 }: {
   hrUserId: string;
   departmentId: number;
+  countryId: number;
   employeeCode?: string;
   fullName?: string;
   email?: string;
   jobTitle?: string;
-  country?: string;
-  grossSalary?: number;
-  currencyCode?: string;
 }) => {
   return prisma.employee.create({
     data: {
@@ -65,12 +97,50 @@ export const createEmployee = async ({
       email,
       jobTitle,
       departmentId,
-      country,
-      grossSalary,
-      currencyCode,
+      countryId,
       hireDate: new Date("2024-01-15"),
       createdById: hrUserId,
     },
-    include: { department: true },
+    include: { department: true, country: true },
+  });
+};
+
+export const createSalary = async ({
+  employeeId,
+  changedById,
+  amount = 50000,
+  currencyCode = "INR",
+  payPeriod = "monthly" as const,
+  effectiveFrom = new Date("2024-01-15"),
+  changeType = "joining" as const,
+  changeReason = null as string | null,
+}: {
+  employeeId: string;
+  changedById: string;
+  amount?: number;
+  currencyCode?: string;
+  payPeriod?: "monthly" | "annual";
+  effectiveFrom?: Date;
+  changeType?: "joining" | "hike" | "correction";
+  changeReason?: string | null;
+}) => {
+  await createCurrency({
+    code: currencyCode,
+    name: currencyCode === "USD" ? "US Dollar" : "Indian Rupee",
+    symbol: currencyCode === "USD" ? "$" : "₹",
+  });
+
+  return prisma.salary.create({
+    data: {
+      employeeId,
+      amount,
+      currencyCode,
+      payPeriod,
+      effectiveFrom,
+      effectiveTo: null,
+      changeType,
+      changeReason,
+      changedById,
+    },
   });
 };

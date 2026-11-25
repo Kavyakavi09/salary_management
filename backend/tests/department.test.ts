@@ -1,6 +1,11 @@
 import request from "supertest";
 import app from "../src/app";
-import { createHrUser, createDepartment, createEmployee } from "./helpers";
+import {
+  createHrUser,
+  createDepartment,
+  createCountry,
+  createEmployee,
+} from "./helpers";
 
 describe("Department CRUD APIs", () => {
   test("rejects unauthenticated access", async () => {
@@ -73,9 +78,11 @@ describe("Department CRUD APIs", () => {
       email: "hr.dept.block@acme.com",
     });
     const department = await createDepartment("Engineering");
+    const country = await createCountry();
     await createEmployee({
       hrUserId: user.id,
       departmentId: department.id,
+      countryId: country.id,
     });
 
     const res = await request(app)

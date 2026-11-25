@@ -13,6 +13,17 @@ enum EmployeeStatus {
   inactive
 }
 
+enum PayPeriod {
+  monthly
+  annual
+}
+
+enum SalaryChangeType {
+  joining
+  hike
+  correction
+}
+
 model HrUser {
   id           String   @id @default(uuid())
   name         String
@@ -22,8 +33,20 @@ model HrUser {
   createdAt    DateTime @default(now()) @map("created_at")
 
   createdEmployees Employee[]
+  changedSalaries  Salary[]
 
   @@map("hr_users")
+}
+
+model Currency {
+  code   String @id
+  name   String
+  symbol String
+
+  countries Country[]
+  salaries  Salary[]
+
+  @@map("currencies")
 }
 
 model Department {
@@ -36,6 +59,19 @@ model Department {
   @@map("departments")
 }
 
+model Country {
+  id           Int      @id @default(autoincrement())
+  name         String   @unique
+  currencyCode String   @map("currency_code")
+  tdsRate      Decimal  @map("tds_rate")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  currency  Currency   @relation(fields: [currencyCode], references: [code])
+  employees Employee[]
+
+  @@map("countries")
+}
+
 model Employee {
   id           String         @id @default(uuid())
   employeeCode String         @unique @map("employee_code")
@@ -43,9 +79,7 @@ model Employee {
   email        String         @unique
   jobTitle     String         @map("job_title")
   departmentId Int            @map("department_id")
-  country      String
-  grossSalary  Decimal        @map("gross_salary")
-  currencyCode String         @map("currency_code")
+  countryId    Int            @map("country_id")
   hireDate     DateTime       @map("hire_date")
   status       EmployeeStatus @default(active)
   createdById  String         @map("created_by")
@@ -54,11 +88,34 @@ model Employee {
   deletedAt    DateTime?      @map("deleted_at")
 
   department Department @relation(fields: [departmentId], references: [id])
+  country    Country    @relation(fields: [countryId], references: [id])
   createdBy  HrUser     @relation(fields: [createdById], references: [id])
+  salaries   Salary[]
 
   @@index([departmentId])
-  @@index([country])
+  @@index([countryId])
   @@index([jobTitle])
   @@index([status])
   @@map("employees")
+}
+
+model Salary {
+  id            String           @id @default(uuid())
+  employeeId    String           @map("employee_id")
+  amount        Decimal
+  currencyCode  String           @map("currency_code")
+  payPeriod     PayPeriod        @map("pay_period")
+  effectiveFrom DateTime         @map("effective_from")
+  effectiveTo   DateTime?        @map("effective_to")
+  changeType    SalaryChangeType @map("change_type")
+  changeReason  String?          @map("change_reason")
+  changedById   String           @map("changed_by")
+  createdAt     DateTime         @default(now()) @map("created_at")
+
+  employee  Employee @relation(fields: [employeeId], references: [id])
+  currency  Currency @relation(fields: [currencyCode], references: [code])
+  changedBy HrUser   @relation(fields: [changedById], references: [id])
+
+  @@index([employeeId, effectiveFrom])
+  @@map("salaries")
 }
