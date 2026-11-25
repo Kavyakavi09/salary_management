@@ -13,16 +13,7 @@ const app = express();
 
 app.set("trust proxy", 1);
 
-const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
-  .split(",")
-  .map((origin) => origin.trim())
-  .filter(Boolean);
-
-app.use(
-  cors({
-    origin: allowedOrigins.includes("*") ? true : allowedOrigins,
-  })
-);
+app.use(cors());
 
 app.use(helmet());
 app.use(express.json());
