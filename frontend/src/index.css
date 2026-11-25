@@ -457,12 +457,18 @@ a {
   font-size: 0.68rem;
   font-weight: 800;
   flex: 0 0 auto;
+  overflow: hidden;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0;
 }
 
 .dash-avatar.sm {
   width: 2rem;
   height: 2rem;
-  font-size: 0.72rem;
+  min-width: 2rem;
+  min-height: 2rem;
+  font-size: 0.65rem;
 }
 
 .dash-content {
@@ -784,8 +790,12 @@ a {
   font: inherit;
 }
 
+.dash-table .name-cell > div {
+  min-width: 0;
+}
+
 .dash-table .name-cell strong,
-.dash-table .name-cell span {
+.dash-table .name-cell > div span {
   display: block;
 }
 
@@ -794,9 +804,16 @@ a {
   color: #0b172a;
 }
 
-.dash-table .name-cell span {
+.dash-table .name-cell > div span {
   color: #64748b;
   font-size: 0.8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dash-table .name-cell .dash-avatar {
+  display: grid;
 }
 
 .dash-table td:nth-child(5) {
