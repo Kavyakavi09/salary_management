@@ -6,6 +6,7 @@ import departmentRouter from "./routes/departmentRoutes";
 import countryRouter from "./routes/countryRoutes";
 import employeeRouter from "./routes/employeeRoutes";
 import salaryCalcRouter from "./routes/salaryCalcRoutes";
+import analyticsRouter from "./routes/analyticsRoutes";
 import { notFound, errorHandler } from "./middleware/errorHandler";
 
 const app = express();
@@ -38,6 +39,7 @@ app.use("/api/departments", departmentRouter);
 app.use("/api/countries", countryRouter);
 app.use("/api/employees", employeeRouter);
 app.use("/api/salary", salaryCalcRouter);
+app.use("/api/analytics", analyticsRouter);
 
 app.use(notFound);
 app.use(errorHandler);

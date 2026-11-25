@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "acme-salary-management-api",
     "name": "ACME Salary Management",
-    "description": "Import: Postman → Import → select this file.\n\nFolders = API routers.\n\nFlow:\n1. Auth → Login (saves {{token}})\n2. Departments → Create / List (saves {{departmentId}})\n3. Countries → Create / List (saves {{countryId}})\n4. Employees → Create\n5. Employees → Set salary (joining), then hike\n6. Salary → Calculate",
+    "description": "Import: Postman → Import → select this file.\n\nFolders = API routers.\n\nFlow:\n1. Auth → Login (saves {{token}})\n2. Departments → Create / List (saves {{departmentId}})\n3. Countries → Create / List (saves {{countryId}})\n4. Employees → Create\n5. Employees → Set salary (joining), then hike\n6. Salary → Calculate\n7. Analytics → by-country / by-job-title",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -639,6 +639,60 @@
               "raw": "{{baseUrl}}/api/salary/calculate",
               "host": ["{{baseUrl}}"],
               "path": ["api", "salary", "calculate"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Analytics (/api/analytics)",
+      "item": [
+        {
+          "name": "GET /api/analytics/by-country",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{token}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/analytics/by-country",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "analytics", "by-country"],
+              "query": [
+                { "key": "countryId", "value": "", "disabled": true },
+                { "key": "currencyCode", "value": "", "disabled": true },
+                { "key": "payPeriod", "value": "monthly", "disabled": true }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /api/analytics/by-job-title",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{token}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/analytics/by-job-title",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "analytics", "by-job-title"],
+              "query": [
+                { "key": "countryId", "value": "", "disabled": true },
+                { "key": "jobTitle", "value": "", "disabled": true },
+                { "key": "currencyCode", "value": "", "disabled": true },
+                { "key": "payPeriod", "value": "monthly", "disabled": true }
+              ]
             }
           },
           "response": []
