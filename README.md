@@ -169,8 +169,11 @@ npm run prisma:seed
 ### 2) Frontend on Netlify
 
 1. Netlify → **Add new site → Import from Git**.
-2. **Base directory:** `frontend`
-3. Build settings are in `frontend/netlify.toml` (`npm run build` → `dist`).
+2. Root `netlify.toml` sets **base = `frontend`** (commit/push this file if it isn’t on GitHub yet).
+3. In Site settings → Build, confirm:
+   - **Base directory:** `frontend`
+   - **Build command:** `npm run build`
+   - **Publish directory:** `dist`
 4. Set env var:
 
 | Key | Value |
