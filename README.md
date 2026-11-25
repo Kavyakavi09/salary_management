@@ -2,6 +2,14 @@
 
 Web API for HR to manage employee salaries. Backend is Node.js + TypeScript + Express + PostgreSQL (Prisma).
 
+### Live app
+
+[https://payflowacme.netlify.app](https://payflowacme.netlify.app/login)
+
+### Demo video
+
+[Watch the product walkthrough](https://drive.google.com/file/d/13mACtX5DvTyJLyTdRGll7EfZ2gMVCfYN/view)
+
 ## Prerequisites
 
 - Node.js 20+
@@ -199,5 +207,7 @@ npm run dev
 
 ## Project docs
 
+- [Live app](https://payflowacme.netlify.app/login)
+- [Demo video](https://drive.google.com/file/d/13mACtX5DvTyJLyTdRGll7EfZ2gMVCfYN/view)
 - [Requirements](docs/REQUIREMENTS.md)
 - [Architecture](docs/ARCHITECTURE.md)
