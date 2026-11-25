@@ -22,13 +22,16 @@ npm run dev
 
 API runs at `http://localhost:8000`.
 
-### Seeded HR user
+### Seeded data
 
 | Field    | Value           |
 | -------- | --------------- |
 | Name     | ACME HR         |
 | Email    | `hr@acme.com`   |
 | Password | `Password123!`  |
+| Employees | `10,000` (`EMP00001`…`EMP10000`) with joining salaries |
+
+Override count with `SEED_EMPLOYEE_COUNT` if needed. Re-running is safe (skips existing codes).
 
 ### Useful scripts
 
@@ -36,7 +39,7 @@ API runs at `http://localhost:8000`.
 | -------------------- | -------------------------- |
 | `npm run dev`        | Start API (nodemon + tsx)  |
 | `npm test`           | Run Jest + Supertest (SQLite test DB, not Postgres) |
-| `npm run prisma:seed`| Seed HR user               |
+| `npm run prisma:seed`| Seed HR user + 10,000 employees |
 | `docker compose up -d` | Start PostgreSQL         |
 
 ### Postman

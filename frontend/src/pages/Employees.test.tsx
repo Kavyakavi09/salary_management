@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "../test/renderWithProviders";
@@ -76,6 +76,44 @@ describe("Employees page", () => {
     expect(screen.getByRole("heading", { name: "Employees" })).toBeInTheDocument();
     expect(await screen.findByText("Ada Lovelace")).toBeInTheDocument();
     expect(screen.getByText("EMP001")).toBeInTheDocument();
+  });
+
+  it("debounces search so typing does not call the API every keystroke", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const user = userEvent.setup({
+      advanceTimers: vi.advanceTimersByTime,
+    });
+
+    vi.mocked(fetchEmployees).mockResolvedValue({
+      success: true,
+      message: "ok",
+      data: [],
+      meta: { page: 1, limit: 10, total: 0, totalPages: 1 },
+    });
+
+    renderWithProviders(<Employees />, { token: "jwt-token", route: "/employees" });
+
+    await waitFor(() => {
+      expect(fetchEmployees).toHaveBeenCalledTimes(1);
+    });
+
+    const input = screen.getByLabelText("Search employees");
+    await user.type(input, "Ada");
+
+    expect(fetchEmployees).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(400);
+    });
+
+    await waitFor(() => {
+      expect(fetchEmployees).toHaveBeenCalledTimes(2);
+      expect(fetchEmployees).toHaveBeenLastCalledWith(
+        expect.objectContaining({ search: "Ada", page: 1 })
+      );
+    });
+
+    vi.useRealTimers();
   });
 
   it("soft-deletes an employee after confirm", async () => {

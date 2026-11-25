@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import { deleteEmployee, fetchEmployees } from "../services/employeeService";
 import { fetchCountries, fetchDepartments } from "../services/lookupService";
 import type { Employee } from "../types/employee";
@@ -8,10 +9,11 @@ import { formatMoney } from "../utils/format";
 import { getApiErrorMessage } from "../utils/apiError";
 
 const Employees = () => {
+  const [searchParams] = useSearchParams();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [countries, setCountries] = useState<Country[]>([]);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(searchParams.get("search") || "");
   const [departmentId, setDepartmentId] = useState("");
   const [countryId, setCountryId] = useState("");
   const [jobTitle, setJobTitle] = useState("");
@@ -19,8 +21,18 @@ const Employees = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
+
+  const debouncedSearch = useDebouncedValue(search, 400);
+  const debouncedJobTitle = useDebouncedValue(jobTitle, 400);
+
+  useEffect(() => {
+    const q = searchParams.get("search") || "";
+    setSearch(q);
+    setPage(1);
+  }, [searchParams]);
 
   useEffect(() => {
     let active = true;
@@ -46,14 +58,16 @@ const Employees = () => {
   useEffect(() => {
     let active = true;
     const load = async () => {
-      setLoading(true);
+      const isFirstLoad = employees.length === 0;
+      if (isFirstLoad) setLoading(true);
+      else setRefreshing(true);
       setError("");
       try {
         const result = await fetchEmployees({
-          search: search.trim() || undefined,
+          search: debouncedSearch.trim() || undefined,
           departmentId: departmentId || undefined,
           countryId: countryId || undefined,
-          jobTitle: jobTitle.trim() || undefined,
+          jobTitle: debouncedJobTitle.trim() || undefined,
           page,
           limit: 10,
         });
@@ -65,14 +79,18 @@ const Employees = () => {
         if (!active) return;
         setError(getApiErrorMessage(err, "Unable to load employees"));
       } finally {
-        if (active) setLoading(false);
+        if (!active) return;
+        setLoading(false);
+        setRefreshing(false);
       }
     };
     void load();
     return () => {
       active = false;
     };
-  }, [search, departmentId, countryId, jobTitle, page]);
+    // employees.length intentionally omitted — only gates loader style
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, departmentId, countryId, debouncedJobTitle, page]);
 
   const onDelete = async (id: string) => {
     const confirmed = window.confirm(
@@ -91,6 +109,9 @@ const Employees = () => {
       setBusyId(null);
     }
   };
+
+  const searchPending = search.trim() !== debouncedSearch.trim();
+  const jobPending = jobTitle.trim() !== debouncedJobTitle.trim();
 
   return (
     <section className="page">
@@ -112,6 +133,7 @@ const Employees = () => {
           className="filter-input"
           placeholder="Search name, email, code"
           value={search}
+          aria-label="Search employees"
           onChange={(e) => {
             setPage(1);
             setSearch(e.target.value);
@@ -120,6 +142,7 @@ const Employees = () => {
         <select
           className="filter-input"
           value={departmentId}
+          aria-label="Filter by department"
           onChange={(e) => {
             setPage(1);
             setDepartmentId(e.target.value);
@@ -135,6 +158,7 @@ const Employees = () => {
         <select
           className="filter-input"
           value={countryId}
+          aria-label="Filter by country"
           onChange={(e) => {
             setPage(1);
             setCountryId(e.target.value);
@@ -151,6 +175,7 @@ const Employees = () => {
           className="filter-input"
           placeholder="Job title"
           value={jobTitle}
+          aria-label="Filter by job title"
           onChange={(e) => {
             setPage(1);
             setJobTitle(e.target.value);
@@ -164,10 +189,14 @@ const Employees = () => {
         </p>
       ) : null}
 
-      <article className="panel">
+      <article className={`panel${refreshing || searchPending || jobPending ? " is-refreshing" : ""}`}>
         <div className="panel-header row">
           <h3>Directory</h3>
-          <p>{total} total</p>
+          <p>
+            {refreshing || searchPending || jobPending
+              ? "Updating…"
+              : `${total.toLocaleString()} total`}
+          </p>
         </div>
 
         {loading ? <p className="page-muted">Loading employees…</p> : null}
@@ -243,18 +272,18 @@ const Employees = () => {
           <button
             type="button"
             className="btn-ghost"
-            disabled={page <= 1}
+            disabled={page <= 1 || loading || refreshing}
             onClick={() => setPage((prev) => Math.max(1, prev - 1))}
           >
             Previous
           </button>
           <span>
-            Page {page} of {totalPages}
+            Page {page} of {Math.max(totalPages, 1)}
           </span>
           <button
             type="button"
             className="btn-ghost"
-            disabled={page >= totalPages}
+            disabled={page >= totalPages || loading || refreshing}
             onClick={() => setPage((prev) => prev + 1)}
           >
             Next
