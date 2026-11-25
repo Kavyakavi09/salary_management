@@ -1,0 +1,36 @@
+databases:
+  - name: acme-salary-db
+    plan: free
+    databaseName: acme_salary
+    user: acme
+
+services:
+  - type: web
+    name: acme-salary-api
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: NODE_ENV
+        value: production
+      - key: JWT_EXPIRY
+        value: 1d
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: acme-salary-db
+          property: connectionString
+      - key: CLIENT_URL
+        sync: false
+      - key: SEED_HR_EMAIL
+        value: hr@acme.com
+      - key: SEED_HR_PASSWORD
+        value: Password123!
+      - key: SEED_HR_NAME
+        value: ACME HR
